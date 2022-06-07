@@ -522,23 +522,23 @@ def get_elastic_tensor(cryst, systems):
     # Decide which deformations should be used
     axis, symm = deform[brav]
 
-    ul = []
-    sl = []
+    ul = []  # A vector of 6-vectors ([u_{xx}, u_{yy}, u_{zz}, u_{yz}, u_{xz}, u_{xy}]), n sets of ULICS
+    sl = []  # A vector of 6-vectors, n sets of stresses
     p = get_pressure(cryst.get_stress())
     for g in systems:
         ul.append(get_strain(g, refcell=cryst))
         # Remove the ambient pressure from the stress tensor
         sl.append(g.get_stress()-array([p, p, p, 0, 0, 0]))
     # print(symm, ul)
-    eqm = array([symm(u) for u in ul])
+    eqm = array([symm(u) for u in ul])  # A 3D array of 6xN (# independent coeff) matrices, shape: (n, 6, N)
     # print(eqm)
     # print(eqm[0].shape, eqm.shape)
-    eqm = reshape(eqm, (eqm.shape[0]*eqm.shape[1], eqm.shape[2]))
+    eqm = reshape(eqm, (eqm.shape[0]*eqm.shape[1], eqm.shape[2]))  # (6n, N)
     # print(eqm)
-    slm = reshape(array(sl), (-1,))
+    slm = reshape(array(sl), (-1,))  # A vector (6n) stresses
     # print(eqm.shape, slm.shape)
     # print(slm)
-    Bij = lstsq(eqm, slm)
+    Bij = lstsq(eqm, slm)  # (6n, N) * (N, 1) = (6n, 1), N: # independent coeff
     # print(Bij[0] / units.GPa)
     # Calculate elastic constants from Birch coeff.
     # TODO: Check the sign of the pressure array in the B <=> C relation
